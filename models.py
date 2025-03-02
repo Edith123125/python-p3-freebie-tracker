@@ -22,8 +22,8 @@ class CompanyDev(Base):
     company_id = Column(Integer(), ForeignKey('companies.id'), primary_key=True)
     dev_id = Column(Integer(), ForeignKey('devs.id'), primary_key=True)
 
-    company = relationship('Company', backref=backref('company_devs'))
-    dev = relationship('Dev', backref=backref('company_devs'))
+    company = relationship('Company', backref=backref('company_devs', overlaps="devs,company_devs"))
+    dev = relationship('Dev', backref=backref('company_devs', overlaps="companies,company_devs"))
 
 # Models
 class Company(Base):
@@ -34,7 +34,7 @@ class Company(Base):
     founding_year = Column(Integer())
 
     freebies = relationship("Freebie", backref="company")
-    devs = relationship("Dev", secondary="company_dev", backref="companies")
+    devs = relationship("Dev", secondary="company_dev", backref=backref("company_associations", overlaps="company_devs,devs"))
 
     def give_freebie(self, dev, item_name, value):
         """Creates a new Freebie instance associated with this company and the given dev."""
@@ -57,6 +57,7 @@ class Dev(Base):
     name = Column(String())
 
     freebies = relationship("Freebie", backref="dev")
+    companies = relationship("Company", secondary="company_dev", backref=backref("dev_associations", overlaps="company_devs,companies"))
 
     def received_one(self, item_name):
         """Returns True if the dev has received a freebie with the given item_name."""
